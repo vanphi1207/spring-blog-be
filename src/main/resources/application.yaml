@@ -1,3 +1,18 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
 spring:
   application:
     name: spring-blog
+  datasource:
+    url: jdbc:mysql://localhost:3306/spring-blog
+    driverClassName: "com.mysql.cj.jdbc.Driver"
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+
