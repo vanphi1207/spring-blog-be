@@ -1,5 +1,6 @@
 package me.ihqqq.spring_blog.exception;
 
+import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
 import me.ihqqq.spring_blog.dto.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -7,9 +8,14 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.Map;
+import java.util.Objects;
+
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    public static final String MIN_ATTRIBUTES = "min";
 
     @ExceptionHandler(value = RuntimeException.class)
     ResponseEntity<ApiResponse> handleException(RuntimeException ex) {
@@ -40,21 +46,34 @@ public class GlobalExceptionHandler {
 
         ErrorCode errorCode = ErrorCode.INVALID_KEY;
 
+        Map<String, Object> attributes = null;
+
         try {
             errorCode = ErrorCode.valueOf(enumKey);
-        } catch (IllegalArgumentException e) {
 
+            var constraintViolation = ex.getBindingResult().getAllErrors()
+                    .getFirst().unwrap(ConstraintViolation.class);
+
+            attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+            log.info(attributes.toString());
+
+        } catch (IllegalArgumentException e) {
+            log.error("Exception: ", e);
         }
 
         ApiResponse apiResponse = new ApiResponse();
 
-        apiResponse.setMessage(errorCode.getMessage());
+        apiResponse.setMessage(Objects.nonNull(attributes) ? mapAttribute(errorCode.getMessage(), attributes)
+                : errorCode.getMessage());
         apiResponse.setCode(errorCode.getCode());
 
         return  ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
     }
 
+    private static String mapAttribute(String message, Map<String, Object> attributes) {
+        String minValue = String.valueOf(attributes.get(MIN_ATTRIBUTES));
 
-
+        return message.replace("{" + MIN_ATTRIBUTES + "}", minValue);
+    }
 
 }
