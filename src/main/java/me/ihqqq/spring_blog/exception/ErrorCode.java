@@ -15,6 +15,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(1003, "User not found", HttpStatus.BAD_REQUEST),
     USERNAME_INVALID(1004, "Username must be at least {min} characters", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(1005, "Password must be at least {min} characters", HttpStatus.BAD_REQUEST),
+    UNAUTHENTICATED(1006, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     ;
 
 
