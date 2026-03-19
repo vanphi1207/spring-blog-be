@@ -8,6 +8,7 @@ import me.ihqqq.spring_blog.dto.response.RoleResponse;
 import me.ihqqq.spring_blog.mapper.RoleMapper;
 import me.ihqqq.spring_blog.repository.PermissionRepository;
 import me.ihqqq.spring_blog.repository.RoleRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -21,6 +22,7 @@ public class RoleService {
     PermissionRepository permissionRepository;
     RoleMapper roleMapper;
 
+    @PreAuthorize("hasRole('ADMIN')")
     public RoleResponse create(RoleRequest request) {
         var role = roleMapper.toRole(request);
 
@@ -31,10 +33,12 @@ public class RoleService {
         return roleMapper.toRoleResponse(role);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public List<RoleResponse> getAll() {
         return roleRepository.findAll().stream().map(roleMapper::toRoleResponse).toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(String role) {
         roleRepository.deleteById(role);
     }
