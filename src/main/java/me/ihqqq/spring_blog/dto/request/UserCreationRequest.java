@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import me.ihqqq.spring_blog.validator.DobConstraint;
 
 import java.time.LocalDate;
 
@@ -28,6 +29,7 @@ public class UserCreationRequest {
     String email;
     String firstName;
     String lastName;
+    @DobConstraint(min = 18, message = "INVALID_DOB")
     LocalDate dob;
 
 
