@@ -21,11 +21,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 import java.util.UUID;
 
 @Service
@@ -93,6 +95,7 @@ public class AuthenticationService {
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plus(validDuration, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
+                .claim("scope", buildScope(user))
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -102,6 +105,18 @@ public class AuthenticationService {
 
         return jwtObject.serialize();
 
+    }
+
+    private String buildScope(User user) {
+        StringJoiner scope = new StringJoiner(" ");
+        if(!CollectionUtils.isEmpty(user.getRoles()))
+            user.getRoles().forEach(role -> {
+                scope.add("ROLE_" + role.getName());
+                if(!CollectionUtils.isEmpty(role.getPermissions()))
+                    role.getPermissions().forEach(permission -> scope.add(permission.getName()));
+            });
+
+        return scope.toString();
     }
 
 

@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -28,6 +29,8 @@ public class User extends BaseEntity {
     String avatarUrl;
     LocalDate dob;
 
+    @ManyToMany
+    Set<Role> roles;
 
 
 
