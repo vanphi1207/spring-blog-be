@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.dto.request.AuthenticationRequest;
 import me.ihqqq.spring_blog.dto.request.IntrospectRequest;
+import me.ihqqq.spring_blog.dto.request.LogoutRequest;
 import me.ihqqq.spring_blog.dto.response.ApiResponse;
 import me.ihqqq.spring_blog.dto.response.AuthenticationResponse;
 import me.ihqqq.spring_blog.dto.response.IntrospectResponse;
@@ -43,6 +44,12 @@ public class AuthenticationController {
                 .build();
     }
 
-
+    @PostMapping("/logout")
+    ApiResponse<Void> logout(@RequestBody LogoutRequest request)
+            throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder()
+                .build();
+    }
 
 }
