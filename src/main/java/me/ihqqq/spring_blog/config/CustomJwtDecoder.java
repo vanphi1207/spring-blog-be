@@ -1,9 +1,6 @@
 package me.ihqqq.spring_blog.config;
 
 import com.nimbusds.jose.JOSEException;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.dto.request.IntrospectRequest;
 import me.ihqqq.spring_blog.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.dto.request.AuthenticationRequest;
 import me.ihqqq.spring_blog.dto.request.IntrospectRequest;
 import me.ihqqq.spring_blog.dto.request.LogoutRequest;
+import me.ihqqq.spring_blog.dto.request.RefreshRequest;
 import me.ihqqq.spring_blog.dto.response.ApiResponse;
 import me.ihqqq.spring_blog.dto.response.AuthenticationResponse;
 import me.ihqqq.spring_blog.dto.response.IntrospectResponse;
@@ -49,6 +50,15 @@ public class AuthenticationController {
             throws ParseException, JOSEException {
         authenticationService.logout(request);
         return ApiResponse.<Void>builder()
+                .build();
+    }
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshRequest request)
+            throws ParseException, JOSEException {
+        var result = authenticationService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
                 .build();
     }
 
