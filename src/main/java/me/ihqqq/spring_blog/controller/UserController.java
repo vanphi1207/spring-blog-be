@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.dto.request.UserCreationRequest;
 import me.ihqqq.spring_blog.dto.request.UserProfileUpdateRequest;
+import me.ihqqq.spring_blog.dto.request.UserRoleUpdateRequest;
 import me.ihqqq.spring_blog.dto.request.UserUpdateRequest;
 import me.ihqqq.spring_blog.dto.response.ApiResponse;
 import me.ihqqq.spring_blog.dto.response.AvatarSignatureResponse;
@@ -13,7 +14,6 @@ import me.ihqqq.spring_blog.dto.response.UserResponse;
 import me.ihqqq.spring_blog.service.CloudinaryService;
 import me.ihqqq.spring_blog.service.UserService;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -37,6 +37,13 @@ public class UserController {
     ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.updateUser(userId, request))
+                .build();
+    }
+
+    @PatchMapping("/{userId}/roles")
+    ApiResponse<UserResponse> updateUserRoles(@PathVariable String userId, @RequestBody UserRoleUpdateRequest request) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.updateUserRoles(userId, request))
                 .build();
     }
 

@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.constant.PredefinedRole;
 import me.ihqqq.spring_blog.dto.request.UserCreationRequest;
 import me.ihqqq.spring_blog.dto.request.UserProfileUpdateRequest;
+import me.ihqqq.spring_blog.dto.request.UserRoleUpdateRequest;
 import me.ihqqq.spring_blog.dto.request.UserUpdateRequest;
 import me.ihqqq.spring_blog.dto.response.UserResponse;
 import me.ihqqq.spring_blog.entity.Role;
@@ -57,7 +58,17 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userMapper.updateUser(user, request);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        if(request.getPassword() != null && !request.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserResponse updateUserRoles(String id, UserRoleUpdateRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         var roles = roleRepository.findAllById(request.getRoles());
         user.setRoles(new HashSet<>(roles));

@@ -2,9 +2,9 @@ package me.ihqqq.spring_blog.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import me.ihqqq.spring_blog.validator.DobConstraint;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -19,8 +19,9 @@ public class UserUpdateRequest {
 
     String bio;
     String avatarUrl;
+
+    @DobConstraint(min = 18, message = "INVALID_DOB")
     LocalDate dob;
 
-    List<String> roles;
 
 }
