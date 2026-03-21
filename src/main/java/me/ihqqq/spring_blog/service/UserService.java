@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.constant.PredefinedRole;
 import me.ihqqq.spring_blog.dto.request.UserCreationRequest;
+import me.ihqqq.spring_blog.dto.request.UserProfileUpdateRequest;
 import me.ihqqq.spring_blog.dto.request.UserUpdateRequest;
 import me.ihqqq.spring_blog.dto.response.UserResponse;
 import me.ihqqq.spring_blog.entity.Role;
@@ -18,7 +19,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -61,6 +61,30 @@ public class UserService {
 
         var roles = roleRepository.findAllById(request.getRoles());
         user.setRoles(new HashSet<>(roles));
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    //Chỉ cập nhật bio, avatarUrl chỉ được set qua updateAvatarUrl()
+    public UserResponse updateMyProfile(UserProfileUpdateRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String username = context.getAuthentication().getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if(request.getBio() != null) {
+            user.setBio(request.getBio());
+        }
+
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    public UserResponse updateAvatarUrl(String avatarUrl) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        user.setAvatarUrl(avatarUrl);
         return userMapper.toUserResponse(userRepository.save(user));
     }
 

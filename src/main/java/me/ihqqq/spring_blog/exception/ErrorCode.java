@@ -18,6 +18,9 @@ public enum ErrorCode {
     UNAUTHENTICATED(1006, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN),
     INVALID_DOB(1008, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
+    UPLOAD_FAILED(1009, "File upload failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_TOO_LARGE(1010, "File size must be not exceed 5MB", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_TYPE(1011, "Only JPEG, PNG and WebP images are allowed", HttpStatus.BAD_REQUEST),
     ;
 
 
