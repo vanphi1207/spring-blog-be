@@ -58,7 +58,7 @@ public class PostController {
 
     @DeleteMapping("/{id}")
     ApiResponse<Void> deletePost(@PathVariable String id) {
-        postService.deletePost(id);
+        postService.deletedPost(id);
         return ApiResponse.<Void>builder().build();
     }
 
@@ -104,7 +104,7 @@ public class PostController {
 
     @DeleteMapping("/admin/posts/{id}")
     ApiResponse<Void> adminDeletePost(@PathVariable String id) {
-        postService.deletePost(id);
+        postService.adminDeletedPost(id);
         return ApiResponse.<Void>builder().build();
     }
 }

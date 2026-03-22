@@ -85,7 +85,7 @@ public class PostService {
     }
 
     @Transactional
-    public void deletePost(String id) {
+    public void deletedPost(String id) {
         Post post = getPostAndCheckOwnership(id);
         postRepository.delete(post);
     }
