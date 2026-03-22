@@ -1,0 +1,26 @@
+package me.ihqqq.spring_blog.util;
+
+
+import java.text.Normalizer;
+
+
+public class SlugUtils {
+
+    private SlugUtils() {}
+
+    public static String toSlug(String input) {
+        if(input == null || input.isBlank()) return "";
+
+        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
+
+        return normalized
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+                .toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .trim()
+                .replaceAll("\\s+", "-")
+                .replaceAll("-+", "-");
+
+    }
+
+}

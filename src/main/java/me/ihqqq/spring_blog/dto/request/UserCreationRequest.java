@@ -1,6 +1,5 @@
 package me.ihqqq.spring_blog.dto.request;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -23,9 +22,8 @@ public class UserCreationRequest {
     @Size(min = 8, message = "INVALID_PASSWORD")
     String password;
 
-    @Email
-    @NotBlank
-    @Column(unique = true, nullable = false)
+    @Email(message = "INVALID_EMAIL")
+    @NotBlank(message = "EMAIL_REQUIRED")
     String email;
     String firstName;
     String lastName;

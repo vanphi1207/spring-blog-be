@@ -57,10 +57,16 @@ public class UserService {
     public UserResponse updateUser(String id, UserUpdateRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!user.getUsername().equals(currentUser)) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
         userMapper.updateUser(user, request);
 
         if(request.getPassword() != null && !request.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
         return userMapper.toUserResponse(userRepository.save(user));
     }
