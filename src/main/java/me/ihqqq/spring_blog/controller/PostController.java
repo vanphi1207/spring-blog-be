@@ -9,6 +9,8 @@ import me.ihqqq.spring_blog.dto.request.PostRequest;
 import me.ihqqq.spring_blog.dto.response.ApiResponse;
 import me.ihqqq.spring_blog.dto.response.PostResponse;
 import me.ihqqq.spring_blog.dto.response.PostSummaryResponse;
+import me.ihqqq.spring_blog.dto.response.ThumbnailSignatureResponse;
+import me.ihqqq.spring_blog.service.CloudinaryService;
 import me.ihqqq.spring_blog.service.PostService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +26,14 @@ import org.springframework.web.bind.annotation.*;
 public class PostController {
 
     PostService postService;
+    CloudinaryService cloudinaryService;
+
+    @GetMapping("/thumbnail/signature")
+    ApiResponse<ThumbnailSignatureResponse> getThumbnailUploadSignature() {
+        return ApiResponse.<ThumbnailSignatureResponse>builder()
+                .result(cloudinaryService.generateThumbnailSignature())
+                .build();
+    }
 
     @GetMapping
     ApiResponse<Page<PostSummaryResponse>> getPublishedPosts(

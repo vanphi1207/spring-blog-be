@@ -5,6 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.dto.response.AvatarSignatureResponse;
+import me.ihqqq.spring_blog.dto.response.ThumbnailSignatureResponse;
 import me.ihqqq.spring_blog.exception.AppException;
 import me.ihqqq.spring_blog.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,6 +53,31 @@ public class CloudinaryService {
                     .cloudName(cloudName)
                     .build();
 
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.UPLOAD_FAILED);
+        }
+    }
+    
+    public ThumbnailSignatureResponse generateThumbnailSignature() {
+        try {
+            String publicId = "thumbnails/" + UUID.randomUUID();
+            long timestamp = System.currentTimeMillis() / 1000L;
+
+            Map<String, Object> params = ObjectUtils.asMap(
+                    "public_id", publicId,
+                    "timestamp", timestamp,
+                    "transformation", "c_fill,w_1200,h_630,q_auto,f_auto"
+                    );
+
+            String signature = cloudinary.apiSignRequest(params, cloudinary.config.apiSecret);
+
+            return ThumbnailSignatureResponse.builder()
+                    .signature(signature)
+                    .publicId(publicId)
+                    .timestamp(timestamp)
+                    .apiKey(apiKey)
+                    .cloudName(cloudName)
+                    .build();
         } catch (Exception e) {
             throw new AppException(ErrorCode.UPLOAD_FAILED);
         }
