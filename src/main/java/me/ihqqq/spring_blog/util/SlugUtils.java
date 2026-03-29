@@ -1,17 +1,18 @@
 package me.ihqqq.spring_blog.util;
 
-
 import java.text.Normalizer;
 
 
-public class SlugUtils {
+
+public final class SlugUtils {
 
     private SlugUtils() {}
 
     public static String toSlug(String input) {
         if(input == null || input.isBlank()) return "";
 
-        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
+        String result = input.replace('đ', 'd').replace('Đ', 'D');
+        String normalized = Normalizer.normalize(result, Normalizer.Form.NFD);
 
         return normalized
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")

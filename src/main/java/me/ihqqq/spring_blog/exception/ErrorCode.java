@@ -26,6 +26,11 @@ public enum ErrorCode {
     TITLE_TOO_LONG(1021, "Title must not exceed 255 characters", HttpStatus.BAD_REQUEST),
     CONTENT_REQUIRED(1022, "Content is required", HttpStatus.BAD_REQUEST),
     EXCERPT_TOO_LONG(1023, "Excerpt must not exceed 500 characters", HttpStatus.BAD_REQUEST),
+    COMMENT_NOT_FOUND(1024, "Comment not found", HttpStatus.NOT_FOUND),
+    COMMENT_CONTENT_REQUIRED(1025, "Comment content is required", HttpStatus.BAD_REQUEST),
+    COMMENT_CONTENT_TOO_LONG(1026, "Comment content must not exceed 2000 characters", HttpStatus.BAD_REQUEST),
+    CANNOT_COMMENT_ON_UNPUBLISHED_POST(1027, "Cannot comment on an unpublished post", HttpStatus.BAD_REQUEST),
+    NESTED_REPLY_NOT_ALLOWED(1028, "Nested replies are not allowed", HttpStatus.BAD_REQUEST),
     ;
 
 
