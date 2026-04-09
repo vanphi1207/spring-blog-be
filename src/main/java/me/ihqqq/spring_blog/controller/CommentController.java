@@ -22,12 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class CommentController {
 
     CommentService commentService;
-
-
-    /**
-     * GET /posts/{postId}/comments
-     * Lấy danh sách comment (có replies) của bài post đã published.
-     */
+    
     @GetMapping("/posts/{postId}/comments")
     ApiResponse<Page<CommentResponse>> getComments(
             @PathVariable String postId,
@@ -37,10 +32,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * GET /posts/{postId}/comments/count
-     * Lấy số lượng comment của bài post.
-     */
     @GetMapping("/posts/{postId}/comments/count")
     ApiResponse<Long> countComments(@PathVariable String postId) {
         return ApiResponse.<Long>builder()
@@ -49,10 +40,6 @@ public class CommentController {
     }
 
 
-    /**
-     * POST /posts/{postId}/comments
-     * Tạo comment mới hoặc reply (nếu body có parentId).
-     */
     @PostMapping("/posts/{postId}/comments")
     @ResponseStatus(HttpStatus.CREATED)
     ApiResponse<CommentResponse> createComment(
@@ -63,10 +50,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * PUT /comments/{commentId}
-     * Cập nhật nội dung comment (chỉ chủ comment).
-     */
     @PutMapping("/comments/{commentId}")
     ApiResponse<CommentResponse> updateComment(
             @PathVariable String commentId,
@@ -75,22 +58,12 @@ public class CommentController {
                 .result(commentService.updateComment(commentId, request))
                 .build();
     }
-
-    /**
-     * DELETE /comments/{commentId}
-     * Soft delete comment (chủ comment hoặc admin).
-     */
     @DeleteMapping("/comments/{commentId}")
     ApiResponse<Void> deleteComment(@PathVariable String commentId) {
         commentService.deleteComment(commentId);
         return ApiResponse.<Void>builder().build();
     }
 
-
-    /**
-     * GET /admin/posts/{postId}/comments
-     * Admin xem tất cả comment kể cả đã xoá.
-     */
     @GetMapping("/admin/posts/{postId}/comments")
     ApiResponse<Page<CommentResponse>> adminGetComments(
             @PathVariable String postId,
@@ -100,10 +73,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * DELETE /admin/comments/{commentId}
-     * Admin hard delete comment.
-     */
     @DeleteMapping("/admin/comments/{commentId}")
     ApiResponse<Void> adminDeleteComment(@PathVariable String commentId) {
         commentService.adminDeleteComment(commentId);

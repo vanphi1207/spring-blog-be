@@ -1,5 +1,6 @@
 package me.ihqqq.spring_blog.service;
 
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -35,10 +36,20 @@ public class UserService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
+    EmailVerificationService emailVerificationService;
 
+    /**
+     * Đăng ký tài khoản mới -> gửi email xác thực
+     */
+    @Transactional
     public UserResponse createUser(UserCreationRequest request) {
+        if(userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setEmailVerified(false);
 
         HashSet<Role> roles = new HashSet<>();
         roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
@@ -49,6 +60,8 @@ public class UserService {
         } catch (DataIntegrityViolationException e) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
+
+        emailVerificationService.sendVerificationEmail(user);
 
         return userMapper.toUserResponse(user);
     }

@@ -22,8 +22,18 @@ public class SecurityConfig {
 
     private final String[] publicEndpoints = {
             "/users",
-            "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh",
-            "/posts/*/comments", "/posts/*/comments/count"
+            "/auth/token",
+            "/auth/introspect",
+            "/auth/logout",
+            "/auth/refresh",
+            "/auth/verify-email",
+            "/auth/resend-verification",
+
+            "/posts",
+            "/posts/{slug}",
+
+            "/posts/*/comments",
+            "/posts/*/comments/count"
     };
 
 

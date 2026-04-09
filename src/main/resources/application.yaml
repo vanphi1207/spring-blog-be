@@ -15,6 +15,27 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: 8b70493bbcc800
+    password: dc44b9e023a25c
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+task:
+  execution:
+    thread-name-prefix: email-async-
+    pool:
+      core-size: 2
+      max-size: 5
+      queue-capacity: 100
+
 jwt:
   signerKey: 350999b1feed6d3f51f110e7ab29e603e75f1a2cdaf7e96af3bb2ad51f24d917
   valid-duration: 3600
@@ -24,3 +45,9 @@ cloudinary:
   cloud-name: div52nkmu
   api-key: 459772333569261
   api-secret: IR-OnQxrYMnmGrFqie3TZrsdWHg
+
+
+app:
+  base-url: http://localhost:8080
+  mail:
+    from: noreply@spring-blog.dev

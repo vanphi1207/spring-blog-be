@@ -1,21 +1,17 @@
 package me.ihqqq.spring_blog.controller;
 
 import com.nimbusds.jose.JOSEException;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import me.ihqqq.spring_blog.dto.request.AuthenticationRequest;
-import me.ihqqq.spring_blog.dto.request.IntrospectRequest;
-import me.ihqqq.spring_blog.dto.request.LogoutRequest;
-import me.ihqqq.spring_blog.dto.request.RefreshRequest;
+import me.ihqqq.spring_blog.dto.request.*;
 import me.ihqqq.spring_blog.dto.response.ApiResponse;
 import me.ihqqq.spring_blog.dto.response.AuthenticationResponse;
 import me.ihqqq.spring_blog.dto.response.IntrospectResponse;
 import me.ihqqq.spring_blog.service.AuthenticationService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import me.ihqqq.spring_blog.service.EmailVerificationService;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 
@@ -26,6 +22,7 @@ import java.text.ParseException;
 public class AuthenticationController {
 
     AuthenticationService authenticationService;
+    EmailVerificationService emailVerificationService;
 
     @PostMapping("/token")
     ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request)
@@ -59,6 +56,28 @@ public class AuthenticationController {
         var result = authenticationService.refreshToken(request);
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
+                .build();
+    }
+
+    /**
+     * User nhận link trong email -> xác thực tài khoản
+     */
+    @GetMapping("/verify-email")
+    ApiResponse<Void> verifyEmail(@RequestParam String token) {
+        emailVerificationService.verifyEmail(token);
+        return ApiResponse.<Void>builder()
+                .message("Email verified successfully, you can now log in")
+                .build();
+    }
+
+    /**
+     * Gửi lại email xác thực nếu link cũ hết hạn
+     */
+    @PostMapping("/resend-verification")
+    ApiResponse<Void> resendVerificationEmail(@RequestBody @Valid ResendVerificationRequest request) {
+        emailVerificationService.resendVerificationEmail(request.getEmail());
+        return ApiResponse.<Void>builder()
+                .message("Verification email has been resent. Please check your inbox.")
                 .build();
     }
 

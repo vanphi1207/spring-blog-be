@@ -56,6 +56,8 @@ public class ApplicationInitConfig {
                 User user = User.builder()
                         .username(ADMIN_USER_NAME)
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
+                        .email("admin@spring-blog.dev")
+                        .emailVerified(true)
                         .roles(roles)
                         .build();
 

@@ -31,6 +31,11 @@ public enum ErrorCode {
     COMMENT_CONTENT_TOO_LONG(1026, "Comment content must not exceed 2000 characters", HttpStatus.BAD_REQUEST),
     CANNOT_COMMENT_ON_UNPUBLISHED_POST(1027, "Cannot comment on an unpublished post", HttpStatus.BAD_REQUEST),
     NESTED_REPLY_NOT_ALLOWED(1028, "Nested replies are not allowed", HttpStatus.BAD_REQUEST),
+    EMAIL_NOT_VERIFIED(1029, "Please verify your email before logging in", HttpStatus.FORBIDDEN),
+    EMAIL_ALREADY_VERIFIED(1030, "Email is already verified", HttpStatus.BAD_REQUEST),
+    INVALID_VERIFICATION_TOKEN(1031, "Invalid or expired verification token", HttpStatus.BAD_REQUEST),
+    EMAIL_SEND_FAILED(1032, "Failed to send verification email", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_EMAIL(1033, "Invalid email address", HttpStatus.BAD_REQUEST),
     ;
 
 
