@@ -36,7 +36,22 @@ public enum ErrorCode {
     INVALID_VERIFICATION_TOKEN(1031, "Invalid or expired verification token", HttpStatus.BAD_REQUEST),
     EMAIL_SEND_FAILED(1032, "Failed to send verification email", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_EMAIL(1033, "Invalid email address", HttpStatus.BAD_REQUEST),
+
+    // Category
+    CATEGORY_NOT_FOUND(1034, "Category not found", HttpStatus.NOT_FOUND),
+    CATEGORY_NAME_EXISTED(1035, "Category name already exists", HttpStatus.BAD_REQUEST),
+    CATEGORY_NAME_REQUIRED(1036, "Category name is required", HttpStatus.BAD_REQUEST),
+    CATEGORY_NAME_TOO_LONG(1037, "Category name must not exceed 100 characters", HttpStatus.BAD_REQUEST),
+    CATEGORY_DESCRIPTION_TOO_LONG(1038, "Category description must not exceed 500 characters", HttpStatus.BAD_REQUEST),
+
+    // Tag
+    TAG_NOT_FOUND(1039, "Tag not found", HttpStatus.NOT_FOUND),
+    TAG_NAME_EXISTED(1040, "Tag name already exists", HttpStatus.BAD_REQUEST),
+    TAG_NAME_REQUIRED(1041, "Tag name is required", HttpStatus.BAD_REQUEST),
+    TAG_NAME_TOO_LONG(1042, "Tag name must not exceed 50 characters", HttpStatus.BAD_REQUEST),
+    TAG_LIMIT_EXCEEDED(1043, "A post cannot have more than 10 tags", HttpStatus.BAD_REQUEST),
     ;
+
 
 
     int code;

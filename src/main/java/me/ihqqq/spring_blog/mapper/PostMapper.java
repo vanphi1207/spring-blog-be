@@ -15,6 +15,8 @@ public interface PostMapper {
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "viewCount", ignore = true)
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "tags", ignore = true)
     Post toPost(PostRequest request);
 
     PostResponse toPostResponse(Post post);
@@ -25,6 +27,8 @@ public interface PostMapper {
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "viewCount", ignore = true)
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "tags", ignore = true)
     void updatePost(@MappingTarget Post post, PostRequest request);
 
 }

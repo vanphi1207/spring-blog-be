@@ -5,6 +5,9 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.constant.PostStatus;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Getter
 @Setter
 @Builder
@@ -40,4 +43,25 @@ public class Post extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     User author;
+
+    //Một post thuộc một category (optional)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    Category category;
+
+    //Một post có nhiều tags
+    @ManyToMany
+    @JoinTable(
+        name = "post_tags",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"),
+            indexes = {
+                    @Index(name = "idx_post_tags_post_id", columnList = "post_id"),
+                    @Index(name = "idx_post_tags_tag_id", columnList = "tag_id")
+            }
+    )
+    @Builder.Default
+    Set<Tag> tags = new HashSet<>();
+
+
 }

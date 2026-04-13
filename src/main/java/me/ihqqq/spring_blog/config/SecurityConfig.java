@@ -33,7 +33,11 @@ public class SecurityConfig {
             "/posts/{slug}",
 
             "/posts/*/comments",
-            "/posts/*/comments/count"
+            "/posts/*/comments/count",
+
+            "/tags",
+            "/tags/*",
+            "/tags/*/posts",
     };
 
 

@@ -6,6 +6,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.constant.PostStatus;
 
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,4 +28,8 @@ public class PostRequest {
     String thumbnailUrl;
 
     PostStatus status;
+
+    String categoryId;
+
+    Set<String> tagIds;
 }

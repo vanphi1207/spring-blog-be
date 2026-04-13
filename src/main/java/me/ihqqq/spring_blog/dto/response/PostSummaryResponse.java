@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.constant.PostStatus;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -22,4 +23,6 @@ public class PostSummaryResponse {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     AuthorResponse author;
+    CategoryResponse category;
+    Set<TagResponse> tags;
 }
