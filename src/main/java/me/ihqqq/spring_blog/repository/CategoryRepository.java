@@ -15,6 +15,6 @@ public interface CategoryRepository extends JpaRepository<Category, String> {
 
     boolean existsBySlug(String slug);
 
-    @Query("SELECT COUNT(p) FROM Post p WHERE p.category.id =: categoryId AND p.status = 'PUBLISHED'")
+    @Query("SELECT COUNT(p) FROM Post p WHERE p.category.id = :categoryId AND p.status = 'PUBLISHED'")
     long countPublishedPostsByCategoryId(@Param("categoryId") String categoryId);
 }

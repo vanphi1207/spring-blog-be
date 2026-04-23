@@ -8,12 +8,16 @@ import me.ihqqq.spring_blog.constant.PostStatus;
 import me.ihqqq.spring_blog.dto.request.PostRequest;
 import me.ihqqq.spring_blog.dto.response.PostResponse;
 import me.ihqqq.spring_blog.dto.response.PostSummaryResponse;
+import me.ihqqq.spring_blog.entity.Category;
 import me.ihqqq.spring_blog.entity.Post;
+import me.ihqqq.spring_blog.entity.Tag;
 import me.ihqqq.spring_blog.entity.User;
 import me.ihqqq.spring_blog.exception.AppException;
 import me.ihqqq.spring_blog.exception.ErrorCode;
 import me.ihqqq.spring_blog.mapper.PostMapper;
+import me.ihqqq.spring_blog.repository.CategoryRepository;
 import me.ihqqq.spring_blog.repository.PostRepository;
+import me.ihqqq.spring_blog.repository.TagRepository;
 import me.ihqqq.spring_blog.repository.UserRepository;
 import me.ihqqq.spring_blog.util.SlugUtils;
 import org.springframework.data.domain.Page;
@@ -23,6 +27,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -31,6 +38,8 @@ public class PostService {
 
     PostRepository postRepository;
     UserRepository userRepository;
+    CategoryRepository categoryRepository;
+    TagRepository tagRepository;
     PostMapper postMapper;
 
     public Page<PostSummaryResponse> getPublishedPosts(Pageable pageable) {
@@ -59,8 +68,21 @@ public class PostService {
         Post post = postMapper.toPost(request);
         post.setSlug(slug);
         post.setAuthor(author);
-
         post.setStatus(request.getStatus() != null ? request.getStatus() : PostStatus.DRAFT);
+
+        if(request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+            post.setCategory(category);
+        }
+
+        if(request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+            if(request.getTagIds().size() > 10) {
+                throw new AppException(ErrorCode.TAG_LIMIT_EXCEEDED);
+            }
+            Set<Tag> tags = new HashSet<>(tagRepository.findAllById(request.getTagIds()));
+            post.setTags(tags);
+        }
 
         return postMapper.toPostResponse(postRepository.save(post));
     }
@@ -78,6 +100,24 @@ public class PostService {
 
         if(request.getStatus() != null) {
             post.setStatus(request.getStatus());
+        }
+
+        if(request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+            post.setCategory(category);
+        } else {
+            post.setCategory(null);
+        }
+
+        if(request.getTagIds() != null) {
+            if(request.getTagIds().size() > 10) {
+                throw new AppException(ErrorCode.TAG_LIMIT_EXCEEDED);
+            }
+            Set<Tag> tags = new HashSet<>(tagRepository.findAllById(request.getTagIds()));
+            post.setTags(tags);
+        } else {
+            post.getTags().clear();
         }
 
         return postMapper.toPostResponse(postRepository.save(post));
