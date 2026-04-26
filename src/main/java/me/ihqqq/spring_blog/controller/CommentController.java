@@ -8,6 +8,7 @@ import me.ihqqq.spring_blog.dto.request.CommentRequest;
 import me.ihqqq.spring_blog.dto.request.CommentUpdateRequest;
 import me.ihqqq.spring_blog.dto.response.ApiResponse;
 import me.ihqqq.spring_blog.dto.response.CommentResponse;
+import me.ihqqq.spring_blog.dto.response.PageResponse;
 import me.ihqqq.spring_blog.service.CommentService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,11 +25,11 @@ public class CommentController {
     CommentService commentService;
     
     @GetMapping("/posts/{postId}/comments")
-    ApiResponse<Page<CommentResponse>> getComments(
+    ApiResponse<PageResponse<CommentResponse>> getComments(
             @PathVariable String postId,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
-        return ApiResponse.<Page<CommentResponse>>builder()
-                .result(commentService.getCommentsByPost(postId, pageable))
+        return ApiResponse.<PageResponse<CommentResponse>>builder()
+                .result(PageResponse.of(commentService.getCommentsByPost(postId, pageable)))
                 .build();
     }
 
@@ -65,11 +66,11 @@ public class CommentController {
     }
 
     @GetMapping("/admin/posts/{postId}/comments")
-    ApiResponse<Page<CommentResponse>> adminGetComments(
+    ApiResponse<PageResponse<CommentResponse>> adminGetComments(
             @PathVariable String postId,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ApiResponse.<Page<CommentResponse>>builder()
-                .result(commentService.adminGetCommentsByPost(postId, pageable))
+        return ApiResponse.<PageResponse<CommentResponse>>builder()
+                .result(PageResponse.of(commentService.adminGetCommentsByPost(postId, pageable)))
                 .build();
     }
 

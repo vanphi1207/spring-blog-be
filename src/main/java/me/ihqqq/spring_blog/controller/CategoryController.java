@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.dto.request.CategoryRequest;
 import me.ihqqq.spring_blog.dto.response.ApiResponse;
 import me.ihqqq.spring_blog.dto.response.CategoryResponse;
+import me.ihqqq.spring_blog.dto.response.PageResponse;
 import me.ihqqq.spring_blog.dto.response.PostSummaryResponse;
 import me.ihqqq.spring_blog.service.CategoryService;
 import org.springframework.data.domain.Page;
@@ -53,11 +54,11 @@ public class CategoryController {
      * Lấy danh sách published posts thuộc category (public).
      */
     @GetMapping("/{slug}/posts")
-    ApiResponse<Page<PostSummaryResponse>> getPostsByCategory(
+    ApiResponse<PageResponse<PostSummaryResponse>> getPostsByCategory(
             @PathVariable String slug,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ApiResponse.<Page<PostSummaryResponse>>builder()
-                .result(categoryService.getPostsByCategory(slug, pageable))
+        return ApiResponse.<PageResponse<PostSummaryResponse>>builder()
+                .result(PageResponse.of(categoryService.getPostsByCategory(slug, pageable)))
                 .build();
     }
 

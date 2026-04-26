@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.dto.request.TagRequest;
 import me.ihqqq.spring_blog.dto.response.ApiResponse;
+import me.ihqqq.spring_blog.dto.response.PageResponse;
 import me.ihqqq.spring_blog.dto.response.PostSummaryResponse;
 import me.ihqqq.spring_blog.dto.response.TagResponse;
 import me.ihqqq.spring_blog.service.TagService;
@@ -53,11 +54,11 @@ public class TagController {
      * Lấy danh sách published posts có tag này (public)
      */
     @GetMapping("/{slug}/posts")
-    ApiResponse<Page<PostSummaryResponse>> getPostsByTag(
+    ApiResponse<PageResponse<PostSummaryResponse>> getPostsByTag(
             @PathVariable String slug,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ApiResponse.<Page<PostSummaryResponse>>builder()
-                .result(tagService.getPostsByTag(slug, pageable))
+        return ApiResponse.<PageResponse<PostSummaryResponse>>builder()
+                .result(PageResponse.of(tagService.getPostsByTag(slug, pageable)))
                 .build();
     }
 

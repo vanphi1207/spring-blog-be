@@ -30,6 +30,7 @@ public class SecurityConfig {
             "/auth/resend-verification",
 
             "/posts",
+            "/posts/search",
             "/posts/{slug}",
 
             "/posts/*/comments",

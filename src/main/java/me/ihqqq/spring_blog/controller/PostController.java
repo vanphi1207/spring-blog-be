@@ -6,10 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import me.ihqqq.spring_blog.constant.PostStatus;
 import me.ihqqq.spring_blog.dto.request.PostRequest;
-import me.ihqqq.spring_blog.dto.response.ApiResponse;
-import me.ihqqq.spring_blog.dto.response.PostResponse;
-import me.ihqqq.spring_blog.dto.response.PostSummaryResponse;
-import me.ihqqq.spring_blog.dto.response.ThumbnailSignatureResponse;
+import me.ihqqq.spring_blog.dto.response.*;
 import me.ihqqq.spring_blog.service.CloudinaryService;
 import me.ihqqq.spring_blog.service.PostService;
 import org.springframework.data.domain.Page;
@@ -36,11 +33,11 @@ public class PostController {
     }
 
     @GetMapping
-    ApiResponse<Page<PostSummaryResponse>> getPublishedPosts(
+    ApiResponse<PageResponse<PostSummaryResponse>> getPublishedPosts(
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        return ApiResponse.<Page<PostSummaryResponse>>builder()
-                .result(postService.getPublishedPosts(pageable))
+        return ApiResponse.<PageResponse<PostSummaryResponse>>builder()
+                .result(PageResponse.of(postService.getPublishedPosts(pageable)))
                 .build();
     }
 
@@ -87,20 +84,29 @@ public class PostController {
     }
 
     @GetMapping("/me/posts")
-    ApiResponse<Page<PostSummaryResponse>> getMyPosts(
+    ApiResponse<PageResponse<PostSummaryResponse>> getMyPosts(
             @RequestParam(required = false) PostStatus status,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ApiResponse.<Page<PostSummaryResponse>>builder()
-                .result(postService.getMyPosts(status, pageable))
+        return ApiResponse.<PageResponse<PostSummaryResponse>>builder()
+                .result(PageResponse.of(postService.getMyPosts(status, pageable)))
                 .build();
 
     }
 
-    @GetMapping("/admin/posts")
-    ApiResponse<Page<PostSummaryResponse>> getAllPosts(
+    @GetMapping("/search")
+    ApiResponse<PageResponse<PostSummaryResponse>> searchPosts(
+            @RequestParam String q,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ApiResponse.<Page<PostSummaryResponse>>builder()
-                .result(postService.getAllPosts(pageable))
+        return ApiResponse.<PageResponse<PostSummaryResponse>>builder()
+                .result(PageResponse.of(postService.searchPosts(q, pageable)))
+                .build();
+    }
+
+    @GetMapping("/admin/posts")
+    ApiResponse<PageResponse<PostSummaryResponse>> getAllPosts(
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ApiResponse.<PageResponse<PostSummaryResponse>>builder()
+                .result(PageResponse.of(postService.getAllPosts(pageable)))
                 .build();
 
     }
@@ -117,4 +123,6 @@ public class PostController {
         postService.adminDeletedPost(id);
         return ApiResponse.<Void>builder().build();
     }
+
+
 }

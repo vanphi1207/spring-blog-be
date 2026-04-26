@@ -202,6 +202,14 @@ public class PostService {
 
         return post;
     }
+    
+    public Page<PostSummaryResponse> searchPosts(String keyword, Pageable pageable) {
+        if(keyword == null || keyword.isBlank()) {
+            return getPublishedPosts(pageable);
+        }
+        return postRepository.searchPublished(keyword.trim(), pageable)
+                .map(postMapper::toPostSummaryResponse);
+    }
 
 
     private String generateUniqueSlug(String title) {
