@@ -21,6 +21,8 @@ public class PostResponse {
     String thumbnailUrl;
     PostStatus status;
     long viewCount;
+    int readingTime;
+    long likeCount;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     AuthorResponse author;

@@ -40,6 +40,10 @@ public class Post extends BaseEntity {
     @Builder.Default
     long viewCount = 0;
 
+    @Column(nullable = false)
+    @Builder.Default
+    int readingTime = 1;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     User author;

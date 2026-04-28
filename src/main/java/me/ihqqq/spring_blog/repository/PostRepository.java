@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.w3c.dom.stylesheets.LinkStyle;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -43,4 +45,33 @@ public interface PostRepository extends JpaRepository<Post, String> {
             "(LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(p.excerpt) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Post> searchPublished(@Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * Tìm related posts dựa trên category hoaặc tags chung
+     * Loại trừ bài hiện tại, chỉ lấy PUBLISHED
+     * Ưu tiên bài có nhiều tag chung nhất
+     */
+    @Query("""
+            SELECT DISTINCT p FROM Post p
+            LEFT JOIN p.tags t
+            WHERE p.status = 'PUBLISHED'
+              AND p.id <> :excludeId
+              AND (
+                  p.category.id = :categoryId
+                  OR t.id IN :tagIds
+              )
+            ORDER BY p.createdAt DESC
+            """)
+    List<Post> findRelatedPosts(
+            @Param("excludeId") String excludeId,
+            @Param("categoryId") String categoryId,
+            @Param("tagIds") List<String> tagIds,
+            Pageable pageable);
+
+    /**
+     * Fallback: lấy bài mới nhất khi không có related posts
+     */
+    @Query("SELECT p FROM Post p WHERE p.status = 'PUBLISHED' AND p.id <> :excludeId ORDER BY p.createdAt DESC")
+    List<Post> findLatestExcluding(@Param("excludeId") String excludeId, Pageable pageable);
+
 }

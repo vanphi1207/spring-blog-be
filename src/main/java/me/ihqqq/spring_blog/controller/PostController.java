@@ -9,12 +9,13 @@ import me.ihqqq.spring_blog.dto.request.PostRequest;
 import me.ihqqq.spring_blog.dto.response.*;
 import me.ihqqq.spring_blog.service.CloudinaryService;
 import me.ihqqq.spring_blog.service.PostService;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -45,6 +46,17 @@ public class PostController {
     ApiResponse<PostResponse> getPostBySlug(@PathVariable String slug) {
         return ApiResponse.<PostResponse>builder()
                 .result(postService.getPostBySlug(slug))
+                .build();
+    }
+
+    @GetMapping("/{postId}/related")
+    ApiResponse<List<PostSummaryResponse>> getRelatedPosts(
+            @PathVariable String postId,
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        int safeLimit = Math.clamp(limit, 1, 10);
+        return ApiResponse.<List<PostSummaryResponse>>builder()
+                .result(postService.getRelatedPosts(postId, safeLimit))
                 .build();
     }
 

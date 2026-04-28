@@ -16,18 +16,23 @@ import me.ihqqq.spring_blog.exception.AppException;
 import me.ihqqq.spring_blog.exception.ErrorCode;
 import me.ihqqq.spring_blog.mapper.PostMapper;
 import me.ihqqq.spring_blog.repository.CategoryRepository;
+import me.ihqqq.spring_blog.repository.PostLikeRepository;
 import me.ihqqq.spring_blog.repository.PostRepository;
 import me.ihqqq.spring_blog.repository.TagRepository;
 import me.ihqqq.spring_blog.repository.UserRepository;
+import me.ihqqq.spring_blog.util.ReadingTimeUtils;
 import me.ihqqq.spring_blog.util.SlugUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -40,24 +45,27 @@ public class PostService {
     UserRepository userRepository;
     CategoryRepository categoryRepository;
     TagRepository tagRepository;
+    PostLikeRepository postLikeRepository;
     PostMapper postMapper;
 
     public Page<PostSummaryResponse> getPublishedPosts(Pageable pageable) {
-        return postRepository.findByStatus(PostStatus.PUBLISHED, pageable).map(postMapper::toPostSummaryResponse);
+        return postRepository.findByStatus(PostStatus.PUBLISHED, pageable)
+                .map(post -> enrichSummary(postMapper.toPostSummaryResponse(post), post.getId()));
     }
 
     @Transactional
     public PostResponse getPostBySlug(String slug) {
-        Post post = postRepository.findBySlug(slug).orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+        Post post = postRepository.findBySlug(slug)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        if(post.getStatus() != PostStatus.PUBLISHED) {
+        if (post.getStatus() != PostStatus.PUBLISHED) {
             throw new AppException(ErrorCode.POST_NOT_FOUND);
         }
 
         post.setViewCount(post.getViewCount() + 1);
         postRepository.save(post);
 
-        return postMapper.toPostResponse(post);
+        return enrichResponse(postMapper.toPostResponse(post), post.getId());
     }
 
     @Transactional
@@ -69,40 +77,43 @@ public class PostService {
         post.setSlug(slug);
         post.setAuthor(author);
         post.setStatus(request.getStatus() != null ? request.getStatus() : PostStatus.DRAFT);
+        post.setReadingTime(ReadingTimeUtils.calculate(request.getContent()));
 
-        if(request.getCategoryId() != null) {
+        if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId())
                     .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
             post.setCategory(category);
         }
 
-        if(request.getTagIds() != null && !request.getTagIds().isEmpty()) {
-            if(request.getTagIds().size() > 10) {
+        if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+            if (request.getTagIds().size() > 10) {
                 throw new AppException(ErrorCode.TAG_LIMIT_EXCEEDED);
             }
             Set<Tag> tags = new HashSet<>(tagRepository.findAllById(request.getTagIds()));
             post.setTags(tags);
         }
 
-        return postMapper.toPostResponse(postRepository.save(post));
+        Post saved = postRepository.save(post);
+        return enrichResponse(postMapper.toPostResponse(saved), saved.getId());
     }
 
     @Transactional
     public PostResponse updatePost(String id, PostRequest request) {
         Post post = getPostAndCheckOwnership(id);
 
-        //Nếu title thay đổi thì regenerate slug
-        if(!post.getTitle().equals(request.getTitle())) {
+        if (!post.getTitle().equals(request.getTitle())) {
             post.setSlug(generateUniqueSlug(request.getTitle()));
         }
 
         postMapper.updatePost(post, request);
 
-        if(request.getStatus() != null) {
+        post.setReadingTime(ReadingTimeUtils.calculate(request.getContent()));
+
+        if (request.getStatus() != null) {
             post.setStatus(request.getStatus());
         }
 
-        if(request.getCategoryId() != null) {
+        if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId())
                     .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
             post.setCategory(category);
@@ -110,8 +121,8 @@ public class PostService {
             post.setCategory(null);
         }
 
-        if(request.getTagIds() != null) {
-            if(request.getTagIds().size() > 10) {
+        if (request.getTagIds() != null) {
+            if (request.getTagIds().size() > 10) {
                 throw new AppException(ErrorCode.TAG_LIMIT_EXCEEDED);
             }
             Set<Tag> tags = new HashSet<>(tagRepository.findAllById(request.getTagIds()));
@@ -120,8 +131,8 @@ public class PostService {
             post.getTags().clear();
         }
 
-        return postMapper.toPostResponse(postRepository.save(post));
-
+        Post saved = postRepository.save(post);
+        return enrichResponse(postMapper.toPostResponse(saved), saved.getId());
     }
 
     @Transactional
@@ -134,14 +145,16 @@ public class PostService {
     public PostResponse publishPost(String id) {
         Post post = getPostAndCheckOwnership(id);
         post.setStatus(PostStatus.PUBLISHED);
-        return postMapper.toPostResponse(postRepository.save(post));
+        Post saved = postRepository.save(post);
+        return enrichResponse(postMapper.toPostResponse(saved), saved.getId());
     }
 
     @Transactional
     public PostResponse unpublishPost(String id) {
         Post post = getPostAndCheckOwnership(id);
         post.setStatus(PostStatus.DRAFT);
-        return postMapper.toPostResponse(postRepository.save(post));
+        Post saved = postRepository.save(post);
+        return enrichResponse(postMapper.toPostResponse(saved), saved.getId());
     }
 
     public Page<PostSummaryResponse> getMyPosts(PostStatus status, Pageable pageable) {
@@ -151,19 +164,19 @@ public class PostService {
                 ? postRepository.findByAuthorIdAndStatus(author.getId(), status, pageable)
                 : postRepository.findByAuthorId(author.getId(), pageable);
 
-        return posts.map(postMapper::toPostSummaryResponse);
+        return posts.map(post -> enrichSummary(postMapper.toPostSummaryResponse(post), post.getId()));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     public Page<PostSummaryResponse> getAllPosts(Pageable pageable) {
         return postRepository.findAll(pageable)
-                .map(postMapper::toPostSummaryResponse);
+                .map(post -> enrichSummary(postMapper.toPostSummaryResponse(post), post.getId()));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void adminDeletedPost(String id) {
-        if(!postRepository.existsById(id)) {
+        if (!postRepository.existsById(id)) {
             throw new AppException(ErrorCode.POST_NOT_FOUND);
         }
         postRepository.deleteById(id);
@@ -171,8 +184,78 @@ public class PostService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public PostResponse adminGetPost(String id) {
-        return postMapper.toPostResponse(postRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND)));
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+        return enrichResponse(postMapper.toPostResponse(post), post.getId());
+    }
+
+    public Page<PostSummaryResponse> searchPosts(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.isBlank()) {
+            return getPublishedPosts(pageable);
+        }
+        return postRepository.searchPublished(keyword.trim(), pageable)
+                .map(post -> enrichSummary(postMapper.toPostSummaryResponse(post), post.getId()));
+    }
+
+    /**
+     * Lấy danh sách related posts của một bài.
+     * Ưu tiên cùng category hoặc chung tag, fallback sang bài mới nhất.
+     */
+    @Transactional(readOnly = true)
+    public List<PostSummaryResponse> getRelatedPosts(String postId, int limit) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        if (post.getStatus() != PostStatus.PUBLISHED) {
+            throw new AppException(ErrorCode.POST_NOT_FOUND);
+        }
+
+        String categoryId = post.getCategory() != null ? post.getCategory().getId() : null;
+        List<String> tagIds = post.getTags().stream().map(Tag::getId).toList();
+
+        List<Post> related;
+
+        if (categoryId != null || !tagIds.isEmpty()) {
+            related = postRepository.findRelatedPosts(
+                    postId,
+                    categoryId != null ? categoryId : "NONE",
+                    tagIds.isEmpty() ? List.of("NONE") : tagIds,
+                    PageRequest.of(0, limit)
+            );
+        } else {
+            related = Collections.emptyList();
+        }
+
+        // Fallback nếu không đủ bài related
+        if (related.size() < limit) {
+            List<Post> latest = postRepository.findLatestExcluding(postId, PageRequest.of(0, limit));
+            Set<String> existingIds = new HashSet<>();
+            related.forEach(p -> existingIds.add(p.getId()));
+
+            for (Post p : latest) {
+                if (related.size() >= limit) break;
+                if (!existingIds.contains(p.getId())) {
+                    related = new java.util.ArrayList<>(related);
+                    ((java.util.ArrayList<Post>) related).add(p);
+                    existingIds.add(p.getId());
+                }
+            }
+        }
+
+        return related.stream()
+                .map(p -> enrichSummary(postMapper.toPostSummaryResponse(p), p.getId()))
+                .toList();
+    }
+
+
+    private PostResponse enrichResponse(PostResponse response, String postId) {
+        response.setLikeCount(postLikeRepository.countByPostId(postId));
+        return response;
+    }
+
+    private PostSummaryResponse enrichSummary(PostSummaryResponse response, String postId) {
+        response.setLikeCount(postLikeRepository.countByPostId(postId));
+        return response;
     }
 
     private User getCurrentUser() {
@@ -191,26 +274,12 @@ public class PostService {
                 .getAuthentication().getAuthorities()
                 .stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        log.info("isAdmin {}", isAdmin);
-        log.info("currentUsername {}", currentUsername);
-        log.info("authorUsername {}", post.getAuthor().getUsername());
-
-        if(!isAdmin && !post.getAuthor().getUsername().equals(currentUsername)) {
+        if (!isAdmin && !post.getAuthor().getUsername().equals(currentUsername)) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
-
         }
 
         return post;
     }
-    
-    public Page<PostSummaryResponse> searchPosts(String keyword, Pageable pageable) {
-        if(keyword == null || keyword.isBlank()) {
-            return getPublishedPosts(pageable);
-        }
-        return postRepository.searchPublished(keyword.trim(), pageable)
-                .map(postMapper::toPostSummaryResponse);
-    }
-
 
     private String generateUniqueSlug(String title) {
         String baseSlug = SlugUtils.toSlug(title);
@@ -223,6 +292,4 @@ public class PostService {
 
         return slug;
     }
-
-
 }

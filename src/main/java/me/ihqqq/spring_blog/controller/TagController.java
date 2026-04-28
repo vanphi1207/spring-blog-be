@@ -10,7 +10,6 @@ import me.ihqqq.spring_blog.dto.response.PageResponse;
 import me.ihqqq.spring_blog.dto.response.PostSummaryResponse;
 import me.ihqqq.spring_blog.dto.response.TagResponse;
 import me.ihqqq.spring_blog.service.TagService;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;

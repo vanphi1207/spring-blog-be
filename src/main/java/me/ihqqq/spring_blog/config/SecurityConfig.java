@@ -32,6 +32,8 @@ public class SecurityConfig {
             "/posts",
             "/posts/search",
             "/posts/{slug}",
+            "/posts/{postId}/related",
+            "/posts/{postId}/like",
 
             "/posts/*/comments",
             "/posts/*/comments/count",
@@ -39,6 +41,10 @@ public class SecurityConfig {
             "/tags",
             "/tags/*",
             "/tags/*/posts",
+
+            "/categories",
+            "/categories/*",
+            "/categories/*/posts",
     };
 
 
