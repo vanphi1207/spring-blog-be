@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -48,9 +49,11 @@ public class PostService {
     PostLikeRepository postLikeRepository;
     PostMapper postMapper;
 
+
+    @Transactional(readOnly = true)
     public Page<PostSummaryResponse> getPublishedPosts(Pageable pageable) {
-        return postRepository.findByStatus(PostStatus.PUBLISHED, pageable)
-                .map(post -> enrichSummary(postMapper.toPostSummaryResponse(post), post.getId()));
+        Page<Post> posts = postRepository.findByStatus(PostStatus.PUBLISHED, pageable);
+        return enrichPageSummary(posts);
     }
 
     @Transactional
@@ -67,6 +70,70 @@ public class PostService {
 
         return enrichResponse(postMapper.toPostResponse(post), post.getId());
     }
+
+    @Transactional(readOnly = true)
+    public Page<PostSummaryResponse> searchPosts(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.isBlank()) {
+            return getPublishedPosts(pageable);
+        }
+        Page<Post> posts = postRepository.searchPublished(keyword.trim(), pageable);
+        return enrichPageSummary(posts);
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<PostSummaryResponse> getRelatedPosts(String postId, int limit) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        if (post.getStatus() != PostStatus.PUBLISHED) {
+            throw new AppException(ErrorCode.POST_NOT_FOUND);
+        }
+
+        String categoryId = post.getCategory() != null ? post.getCategory().getId() : null;
+        List<String> tagIds = post.getTags().stream().map(Tag::getId).toList();
+
+        List<Post> related;
+
+        if (categoryId != null || !tagIds.isEmpty()) {
+            related = postRepository.findRelatedPosts(
+                    postId,
+                    categoryId != null ? categoryId : "NONE",
+                    tagIds.isEmpty() ? List.of("NONE") : tagIds,
+                    PageRequest.of(0, limit)
+            );
+        } else {
+            related = Collections.emptyList();
+        }
+
+        if (related.size() < limit) {
+            List<Post> latest = postRepository.findLatestExcluding(postId, PageRequest.of(0, limit));
+            Set<String> existingIds = new HashSet<>();
+            related.forEach(p -> existingIds.add(p.getId()));
+
+            List<Post> mutableRelated = new java.util.ArrayList<>(related);
+            for (Post p : latest) {
+                if (mutableRelated.size() >= limit) break;
+                if (!existingIds.contains(p.getId())) {
+                    mutableRelated.add(p);
+                    existingIds.add(p.getId());
+                }
+            }
+            related = mutableRelated;
+        }
+
+        List<String> relatedIds = related.stream().map(Post::getId).toList();
+        Map<String, Long> likeCountMap = postLikeRepository.getLikeCountMap(relatedIds);
+
+        return related.stream()
+                .map(p -> {
+                    PostSummaryResponse summary = postMapper.toPostSummaryResponse(p);
+                    summary.setLikeCount(likeCountMap.getOrDefault(p.getId(), 0L));
+                    return summary;
+                })
+                .toList();
+    }
+
 
     @Transactional
     public PostResponse createPost(PostRequest request) {
@@ -106,7 +173,6 @@ public class PostService {
         }
 
         postMapper.updatePost(post, request);
-
         post.setReadingTime(ReadingTimeUtils.calculate(request.getContent()));
 
         if (request.getStatus() != null) {
@@ -157,6 +223,7 @@ public class PostService {
         return enrichResponse(postMapper.toPostResponse(saved), saved.getId());
     }
 
+    @Transactional(readOnly = true)
     public Page<PostSummaryResponse> getMyPosts(PostStatus status, Pageable pageable) {
         User author = getCurrentUser();
 
@@ -164,13 +231,15 @@ public class PostService {
                 ? postRepository.findByAuthorIdAndStatus(author.getId(), status, pageable)
                 : postRepository.findByAuthorId(author.getId(), pageable);
 
-        return posts.map(post -> enrichSummary(postMapper.toPostSummaryResponse(post), post.getId()));
+        return enrichPageSummary(posts);
     }
 
+
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional(readOnly = true)
     public Page<PostSummaryResponse> getAllPosts(Pageable pageable) {
-        return postRepository.findAll(pageable)
-                .map(post -> enrichSummary(postMapper.toPostSummaryResponse(post), post.getId()));
+        Page<Post> posts = postRepository.findAll(pageable);
+        return enrichPageSummary(posts);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -183,77 +252,28 @@ public class PostService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional(readOnly = true)
     public PostResponse adminGetPost(String id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
         return enrichResponse(postMapper.toPostResponse(post), post.getId());
     }
 
-    public Page<PostSummaryResponse> searchPosts(String keyword, Pageable pageable) {
-        if (keyword == null || keyword.isBlank()) {
-            return getPublishedPosts(pageable);
-        }
-        return postRepository.searchPublished(keyword.trim(), pageable)
-                .map(post -> enrichSummary(postMapper.toPostSummaryResponse(post), post.getId()));
-    }
 
-    /**
-     * Lấy danh sách related posts của một bài.
-     * Ưu tiên cùng category hoặc chung tag, fallback sang bài mới nhất.
-     */
-    @Transactional(readOnly = true)
-    public List<PostSummaryResponse> getRelatedPosts(String postId, int limit) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+    private Page<PostSummaryResponse> enrichPageSummary(Page<Post> posts) {
+        List<String> postIds = posts.map(Post::getId).toList();
 
-        if (post.getStatus() != PostStatus.PUBLISHED) {
-            throw new AppException(ErrorCode.POST_NOT_FOUND);
-        }
+        Map<String, Long> likeCountMap = postLikeRepository.getLikeCountMap(postIds);
 
-        String categoryId = post.getCategory() != null ? post.getCategory().getId() : null;
-        List<String> tagIds = post.getTags().stream().map(Tag::getId).toList();
-
-        List<Post> related;
-
-        if (categoryId != null || !tagIds.isEmpty()) {
-            related = postRepository.findRelatedPosts(
-                    postId,
-                    categoryId != null ? categoryId : "NONE",
-                    tagIds.isEmpty() ? List.of("NONE") : tagIds,
-                    PageRequest.of(0, limit)
-            );
-        } else {
-            related = Collections.emptyList();
-        }
-
-        // Fallback nếu không đủ bài related
-        if (related.size() < limit) {
-            List<Post> latest = postRepository.findLatestExcluding(postId, PageRequest.of(0, limit));
-            Set<String> existingIds = new HashSet<>();
-            related.forEach(p -> existingIds.add(p.getId()));
-
-            for (Post p : latest) {
-                if (related.size() >= limit) break;
-                if (!existingIds.contains(p.getId())) {
-                    related = new java.util.ArrayList<>(related);
-                    ((java.util.ArrayList<Post>) related).add(p);
-                    existingIds.add(p.getId());
-                }
-            }
-        }
-
-        return related.stream()
-                .map(p -> enrichSummary(postMapper.toPostSummaryResponse(p), p.getId()))
-                .toList();
+        return posts.map(post -> {
+            PostSummaryResponse summary = postMapper.toPostSummaryResponse(post);
+            summary.setLikeCount(likeCountMap.getOrDefault(post.getId(), 0L));
+            return summary;
+        });
     }
 
 
     private PostResponse enrichResponse(PostResponse response, String postId) {
-        response.setLikeCount(postLikeRepository.countByPostId(postId));
-        return response;
-    }
-
-    private PostSummaryResponse enrichSummary(PostSummaryResponse response, String postId) {
         response.setLikeCount(postLikeRepository.countByPostId(postId));
         return response;
     }

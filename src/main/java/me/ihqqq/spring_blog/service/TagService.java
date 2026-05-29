@@ -102,7 +102,7 @@ public class TagService {
         //Kiểm tra name trùng với tag khác (case-insensitive)
         if(!tag.getName().equalsIgnoreCase(request.getName())) {
             tagRepository.findByNameIgnoreCase(request.getName()).ifPresent(existingTag -> {
-                if(existingTag.getId().equals(id)) {
+                if(!existingTag.getId().equals(id)) {
                     throw new AppException(ErrorCode.TAG_NAME_EXISTED);
                 }
             });
