@@ -3,6 +3,7 @@ package me.ihqqq.spring_blog.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,20 +21,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final String[] publicEndpoints = {
-            "/users",
-            "/auth/token",
-            "/auth/introspect",
-            "/auth/logout",
-            "/auth/refresh",
-            "/auth/verify-email",
-            "/auth/resend-verification",
-
+    private final String[] publicGetEndpoints = {
             "/posts",
             "/posts/search",
             "/posts/{slug}",
             "/posts/{postId}/related",
-            "/posts/{postId}/like",
+            "/posts/{postId}/likes",
 
             "/posts/*/comments",
             "/posts/*/comments/count",
@@ -45,21 +38,32 @@ public class SecurityConfig {
             "/categories",
             "/categories/*",
             "/categories/*/posts",
+
+            "/auth/verify-email",
     };
 
+    private final String[] publicPostEndpoints = {
+            "/users",
+            "/auth/token",
+            "/auth/introspect",
+            "/auth/logout",
+            "/auth/refresh",
+            "/auth/resend-verification",
+    };
 
-    CustomJwtDecoder customJwtDecoder;
+    private final CustomJwtDecoder customJwtDecoder;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) {
         httpSecurity.authorizeHttpRequests(request ->
-                request.requestMatchers(publicEndpoints).permitAll()
+                request.requestMatchers(HttpMethod.GET, publicGetEndpoints).permitAll()
+                        .requestMatchers(HttpMethod.POST, publicPostEndpoints).permitAll()
                         .anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwtConfigurer -> jwtConfigurer
-                        .decoder(customJwtDecoder)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                                .decoder(customJwtDecoder)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                         .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
 
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
